@@ -53,7 +53,6 @@ type
       procedure MenuShow(sMenu: byte);
       procedure HandleReturn;
       function CountMedleySongs: integer;
-      procedure UpdateJukeboxButtons;
   end;
 
 const
@@ -76,7 +75,7 @@ const
   SM_Song             = 64 or 8;
   SM_Medley           = 64 or 16;
   SM_Sorting = 64 or 32;
-  SM_Jukebox          = 64 or 128;
+  SM_Search_new_songs = 64 or 7;
 
 var
   ISelections1: array of UTF8String;
@@ -92,6 +91,7 @@ implementation
 
 uses
   Math,
+  UCommon,
   UDatabase,
   UGraphic,
   UMain,
@@ -132,15 +132,6 @@ begin
       end;
     end;
 
-    // check normal keys
-    case UCS4UpperCase(CharCode) of
-      Ord('Q'):
-        begin
-          Result := false;
-          Exit;
-        end;
-    end;
-
     // check special keys
     case PressedKey of
       SDLK_ESCAPE,
@@ -166,6 +157,8 @@ begin
         if (Interaction=3) or (Interaction=4) or (Interaction=5)
           or (Interaction=8) or (Interaction=9) or (Interaction=10) then
             InteractDec;
+      SDLK_F10:
+        Self.Visible := false;
     end;
   end;
 end;
@@ -212,6 +205,10 @@ begin
   if (Length(Button[4].Text) = 0) then
     AddButtonText(14, 20, 'Button 5');
 
+  AddButton(Theme.SongMenu.Button6);
+  if (Length(Button[5].Text) = 0) then
+    AddButtonText(14, 20, 'Button 6');
+
   Interaction := 0;
 end;
 
@@ -236,17 +233,6 @@ begin
   Result := Count;
 end;
 
-procedure TScreenSongMenu.UpdateJukeboxButtons();
-begin
-   Button[1].Visible := not (CatSongs.Song[ScreenSong.Interaction].Main);
-   Button[2].Visible := (Length(ScreenJukebox.JukeboxSongsList) > 0);
-
-   if (CatSongs.Song[ScreenSong.Interaction].Main) then
-     Button[0].Text[0].Text := Language.Translate('SONG_MENU_OPEN_CATEGORY')
-   else
-     Button[0].Text[0].Text := Language.Translate('SONG_MENU_CLOSE_CATEGORY');
-end;
-
 procedure TScreenSongMenu.MenuShow(sMenu: byte);
 var
   I, MSongs: integer;
@@ -261,19 +247,30 @@ begin
         Text[0].Text := Language.Translate('SONG_MENU_NAME_MAIN');
 
         Button[0].Visible := true;
-        Button[1].Visible := ((Length(PlaylistMedley.Song) > 0) or (CatSongs.Song[ScreenSong.Interaction].Medley.Source > msNone));
+        Button[1].Visible := true;
         Button[2].Visible := true;
         Button[3].Visible := true;
-        Button[4].Visible := false;
+        Button[4].Visible := true;
+        Button[5].Visible := ((Length(PlaylistMedley.Song) > 0) or (CatSongs.Song[ScreenSong.Interaction].Medley.Source > msNone));
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
         SelectsS[2].Visible := false;
 
-        Button[0].Text[0].Text := Language.Translate('SONG_MENU_SONG');
-        Button[1].Text[0].Text := Language.Translate('SONG_MENU_MEDLEY');
-        Button[2].Text[0].Text := Language.Translate('SONG_MENU_REFRESH_SCORES');
-        Button[3].Text[0].Text := Language.Translate('SONG_MENU_NAME_SORTING');
+        //Reset buttons from other sections
+        Button[0].Selectable := true;
+        Button[1].Selectable := true;
+        Button[2].Selectable := true;
+        Button[3].Selectable := true;
+        Button[4].Selectable := true;
+        Button[5].Selectable := true;
+
+        Button[0].Text[0].Text := Language.Translate('C_SELECT_THIS_SONG');
+        Button[1].Text[0].Text := Language.Translate('C_SORT_SONGS');
+        Button[2].Text[0].Text := Language.Translate('C_REFRESH_SCORES');
+        Button[3].Text[0].Text := Language.Translate('C_SEARCH_NEW_SONGS');
+        Button[4].Text[0].Text := Language.Translate('C_OPEN_PLAYLIST');
+        Button[5].Text[0].Text := Language.Translate('C_SING_MEDLEY');
 
       end;
     SM_Song:
@@ -286,6 +283,7 @@ begin
         Button[2].Visible := true;
         Button[3].Visible := false;
         Button[4].Visible := true;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
@@ -294,7 +292,7 @@ begin
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_PLAY');
         Button[1].Text[0].Text := Language.Translate('SONG_MENU_CHANGEPLAYERS');
         Button[2].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_ADD');
-        Button[4].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
+        Button[4].Text[0].Text := Language.Translate('C_BACK');
       end;
 
     SM_Medley:
@@ -302,7 +300,7 @@ begin
         CurMenu := sMenu;
         MSongs := CountMedleySongs;
 
-        Text[0].Text := Language.Translate('SONG_MENU_NAME_MEDLEY');
+        Text[0].Text := Language.Translate('C_MEDLEY');
 
         Button[0].Visible := (CatSongs.Song[ScreenSong.Interaction].Medley.Source > msNone);
         Button[1].Visible := (Length(PlaylistMedley.Song)>0);
@@ -310,43 +308,45 @@ begin
           (CatSongs.Song[ScreenSong.Interaction].Medley.Source > msNone);
         Button[3].Visible := (not ScreenSong.MakeMedley) and (MSongs > 1);
         Button[4].Visible := true;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
         SelectsS[2].Visible := false;
 
-        Button[0].Text[0].Text := Language.Translate('SONG_MENU_ADD_SONG');
+        Button[0].Text[0].Text := Language.Translate('SONG_MENU_ADD_SONG_TO_LIST');
         Button[1].Text[0].Text := Language.Translate('SONG_MENU_DELETE_SONG');
         Button[2].Text[0].Text := Language.Translate('SONG_MENU_START_MEDLEY');
         Button[3].Text[0].Text := Format(Language.Translate('SONG_MENU_START_5_MEDLEY'), [MSongs]);
-        Button[4].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
+        Button[4].Text[0].Text := Language.Translate('C_BACK');
       end;
 
     SM_Sorting:
       begin
         CurMenu := sMenu;
-        Self.Text[0].Text := Language.Translate('SONG_MENU_NAME_SORTING');
+        Self.Text[0].Text := Language.Translate('C_SORT_SONGS');
         Self.Button[0].Visible := false;
         Self.Button[1].Visible := false;
         Self.Button[2].Visible := false;
         Self.Button[3].Visible := true;
         Self.Button[4].Visible := true;
+        Self.Button[5].Visible := false;
         Self.SelectsS[0].Visible := true;
         Self.SelectsS[1].Visible := true;
         Self.SelectsS[2].Visible := true;
 
         SetLength(ISelections1, 2);
 
-        ISelections1[0] := ULanguage.Language.Translate('SING_OPTIONS_GAME_TABS')+': '+ULanguage.Language.Translate('OPTION_VALUE_OFF');
-        ISelections1[1] := ULanguage.Language.Translate('SING_OPTIONS_GAME_TABS')+': '+ULanguage.Language.Translate('OPTION_VALUE_ON');
+        ISelections1[0] := ULanguage.Language.Translate('SING_OPTIONS_GAME_TABS')+': '+ULanguage.Language.Translate('C_NO');
+        ISelections1[1] := ULanguage.Language.Translate('SING_OPTIONS_GAME_TABS')+': '+ULanguage.Language.Translate('C_YES');
 
         SetLength(ISelections2, Length(UIni.ISorting));
         For I := 0 to High(UIni.ISorting) do
           ISelections2[I] := ULanguage.Language.Translate('SING_OPTIONS_GAME_SORTING')+': '+ULanguage.Language.Translate('OPTION_VALUE_'+UIni.ISorting[I]);
 
         SetLength(ISelections3, 2);
-        ISelections3[0] := ULanguage.Language.Translate('SING_OPTIONS_GAME_DUETS')+': '+ULanguage.Language.Translate('OPTION_VALUE_ON');
-        ISelections3[1] := ULanguage.Language.Translate('SING_OPTIONS_GAME_DUETS')+': '+ULanguage.Language.Translate('OPTION_VALUE_OFF');
+        ISelections3[0] := ULanguage.Language.Translate('SING_OPTIONS_GAME_DUETS')+': '+ULanguage.Language.Translate('C_YES');
+        ISelections3[1] := ULanguage.Language.Translate('SING_OPTIONS_GAME_DUETS')+': '+ULanguage.Language.Translate('C_NO');
 
         SelectValue1 := UIni.Ini.Tabs;
         SelectValue2 := UIni.Ini.Sorting;
@@ -355,8 +355,8 @@ begin
         Self.UpdateSelectSlideOptions(UThemes.Theme.SongMenu.SelectSlide2, 1, ISelections2, SelectValue2);
         Self.UpdateSelectSlideOptions(UThemes.Theme.SongMenu.SelectSlide3, 2, ISelections3, SelectValue3);
 
-        Self.Button[3].Text[0].Text := ULanguage.Language.Translate('SONG_MENU_SORTING_APPLY');
-        Self.Button[4].Text[0].Text := ULanguage.Language.Translate('SONG_MENU_CANCEL');
+        Self.Button[3].Text[0].Text := ULanguage.Language.Translate('C_APPLY_CHANGES');
+        Self.Button[4].Text[0].Text := ULanguage.Language.Translate('C_BACK');
 
         Self.Interaction := 3;
       end;
@@ -371,6 +371,7 @@ begin
         Button[2].Visible := true;
         Button[3].Visible := true;
         Button[4].Visible := false;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
@@ -391,6 +392,7 @@ begin
         Button[2].Visible := false;
         Button[3].Visible := true;
         Button[4].Visible := true;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
@@ -398,13 +400,16 @@ begin
 
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_ADD_NEW');
         Button[3].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_ADD_EXISTING');
-        Button[4].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
+        Button[4].Text[0].Text := Language.Translate('C_BACK');
 
-        SetLength(ISelections3, Length(PlaylistMan.Playlists));
+        I := Length(PlaylistMan.Playlists);
+        SetLength(ISelections3, I);
         PlaylistMan.GetNames(ISelections3);
-
-        if (Length(ISelections3)>=1) then
+        if I >= 1 then
         begin
+          if SelectValue3 >= I then
+            SelectValue3 := I - 1;
+
           UpdateSelectSlideOptions(Theme.SongMenu.SelectSlide3, 2, ISelections3, SelectValue3);
         end
         else
@@ -428,6 +433,7 @@ begin
         Button[2].Visible := false;
         Button[3].Visible := true;
         Button[4].Visible := true;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
@@ -435,7 +441,7 @@ begin
 
         Button[1].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_NEW_UNNAMED');
         Button[3].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_NEW_CREATE');
-        Button[4].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
+        Button[4].Text[0].Text := Language.Translate('C_BACK');
 
         Interaction := 1;
       end;
@@ -450,19 +456,20 @@ begin
         Button[2].Visible := false;
         Button[3].Visible := true;
         Button[4].Visible := false;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
         SelectsS[2].Visible := false;
 
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_YES');
-        Button[3].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
+        Button[3].Text[0].Text := Language.Translate('C_BACK');
       end;
 
     SM_Playlist_Load:
       begin
         CurMenu := sMenu;
-        Text[0].Text := Language.Translate('SONG_MENU_NAME_PLAYLIST_LOAD');
+        Text[0].Text := Language.Translate('C_PLAYLIST');
 
         // show delete curent playlist button when playlist is opened
         Button[0].Visible := (CatSongs.CatNumShow = -3);
@@ -470,7 +477,8 @@ begin
         Button[1].Visible := false;
         Button[2].Visible := false;
         Button[3].Visible := true;
-        Button[4].Visible := false;
+        Button[4].Visible := true;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
@@ -478,24 +486,32 @@ begin
 
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_DELCURRENT');
         Button[3].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_LOAD');
+        Button[4].Text[0].Text := Language.Translate('C_BACK');
 
-        SetLength(ISelections3, Length(PlaylistMan.Playlists));
+        I := Length(PlaylistMan.Playlists);
+        SetLength(ISelections3, I);
         PlaylistMan.GetNames(ISelections3);
-
-        if (Length(ISelections3)>=1) then
+        if I >= 1 then
         begin
+          if SelectValue3 >= I then
+            SelectValue3 := I - 1;
+
           UpdateSelectSlideOptions(Theme.SongMenu.SelectSlide3, 2, ISelections3, SelectValue3);
           Interaction := 3;
         end
         else
         begin
-          Button[3].Visible := false;
           SelectsS[0].Visible := false;
           SelectsS[1].Visible := false;
+
           SelectsS[2].Visible := false;
           Button[2].Visible := true;
           Button[2].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_NOEXISTING');
-          Interaction := 2;
+          Button[2].Selectable := false;
+
+          Button[3].Visible := false;
+
+          Interaction := 7;
         end;
       end;
 
@@ -509,13 +525,14 @@ begin
         Button[2].Visible := false;
         Button[3].Visible := true;
         Button[4].Visible := false;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
         SelectsS[2].Visible := false;
 
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_YES');
-        Button[3].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
+        Button[3].Text[0].Text := Language.Translate('C_BACK');
       end;
 
     SM_Party_Main:
@@ -528,6 +545,7 @@ begin
         Button[2].Visible := false;
         Button[3].Visible := true;
         Button[4].Visible := false;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
@@ -549,6 +567,7 @@ begin
         Button[2].Visible := (Length(Party.Teams) >= 3) AND (Party.Teams[2].JokersLeft > 0);
         Button[3].Visible := True;
         Button[4].Visible := false;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := False;
         SelectsS[1].Visible := False;
@@ -560,7 +579,7 @@ begin
           Button[1].Text[0].Text := UTF8String(Party.Teams[1].Name);
         if (Button[2].Visible) then
           Button[2].Text[0].Text := UTF8String(Party.Teams[2].Name);
-        Button[3].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
+        Button[3].Text[0].Text := Language.Translate('C_BACK');
 
         // set right interaction
         if (not Button[0].Visible) then
@@ -581,19 +600,21 @@ begin
     SM_Refresh_Scores:
       begin
         CurMenu := sMenu;
-        Text[0].Text := Language.Translate('SONG_MENU_REFRESH_SCORES_TITLE');
+        Text[0].Text := Language.Translate('C_REFRESH_SCORES');
 
         Button[0].Visible := false;
         Button[1].Visible := false;
-        Button[2].Visible := false;
+        Button[2].Visible := true;
         Button[3].Visible := false;
         Button[4].Visible := true;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := true;
         SelectsS[1].Visible := true;
         SelectsS[2].Visible := true;
 
-        Button[4].Text[0].Text := Language.Translate('SONG_MENU_REFRESH_SCORES_REFRESH');
+        Button[2].Text[0].Text := Language.Translate('SONG_MENU_REFRESH_SCORES_REFRESH');
+        Button[4].Text[0].Text := Language.Translate('C_BACK');
 
         if (High(DataBase.NetworkUser) > 0) then
           SetLength(ISelections3, Length(DataBase.NetworkUser) + 1)
@@ -627,7 +648,7 @@ begin
           SelectsS[1].Visible := false;
           SelectsS[2].Visible := false;
           Button[2].Visible := true;
-          Button[2].Text[0].Text := Language.Translate('SONG_MENU_REFRESH_SCORES_NO_WEB');
+          Button[2].Text[0].Text := Language.Translate('C_NO_INTERNET_CONNECTION');
           Button[2].Selectable := false;
           Button[3].Text[0].Text := ULanguage.Language.Translate('SING_OPTIONS_NETWORK_DESC');
           Interaction := 7;
@@ -643,6 +664,8 @@ begin
         Button[1].Visible := false;
         Button[2].Visible := false;
         Button[3].Visible := false;
+        Button[4].Visible := false;
+        Button[5].Visible := false;
 
         SelectsS[0].Visible := false;
         SelectsS[1].Visible := false;
@@ -650,62 +673,33 @@ begin
 
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_PLAY');
       end;
-
-    SM_Jukebox:
-      begin
-        CurMenu := sMenu;
-
-        Text[0].Text := Language.Translate('SONG_MENU_NAME_JUKEBOX');
-
-        UpdateJukeboxButtons();
-
-        Button[0].Visible := (UIni.Ini.Tabs = 1);
-        Button[3].Visible := false;
-        Button[4].Visible := true;
-
-        SelectsS[0].Visible := false;
-        SelectsS[1].Visible := false;
-        SelectsS[2].Visible := false;
-
-        Button[1].Text[0].Text := Language.Translate('SONG_MENU_ADD_SONG');
-        Button[2].Text[0].Text := Language.Translate('SONG_MENU_DELETE_SONG');
-
-        Button[4].Text[0].Text := Language.Translate('SONG_MENU_START_JUKEBOX');
-
-        if (UIni.Ini.Tabs = 1) then
-          Interaction := 0
-        else
-          Interaction := 1;
-
+	  SM_Search_new_songs:
+	    begin
+        Self.FadeTo(@UGraphic.ScreenMain);
+        UGraphic.ScreenMain.ReloadSongs();
       end;
   end;
 end;
 
 procedure TScreenSongMenu.HandleReturn;
-var
-  I: integer;
 begin
   case CurMenu of
     SM_Main:
       begin
         case Interaction of
           0: // button 1
-            begin
               MenuShow(SM_Song);
-            end;
-
           1: // button 2
-            begin
-              MenuShow(SM_Medley);
-            end;
-
+              Self.MenuShow(SM_Sorting);
           2: // button 3
-            begin
               // show refresh scores menu
               MenuShow(SM_Refresh_Scores);
-            end;
-          6:
-            Self.MenuShow(SM_Sorting);
+          6: // button 4
+              MenuShow(SM_Search_new_songs);
+          7: // button 5
+              MenuShow(SM_Playlist_Load);
+          8: // button 6
+              MenuShow(SM_Medley);
         end;
       end;
 
@@ -862,6 +856,7 @@ begin
             begin
               // dummy
             end;
+
         end;
       end;
 
@@ -889,6 +884,7 @@ begin
               // show song menu
               MenuShow(SM_Song);
             end;
+
         end;
       end;
 
@@ -949,6 +945,11 @@ begin
               UGraphic.ScreenSong.SetSubselection(SelectValue3, sfPlaylist);
               Visible := false;
             end;
+          7: // button 5
+			              begin
+                Button[4].Selectable := true;
+                MenuShow(SM_Main);
+              end;
         end;
       end;
 
@@ -1033,73 +1034,6 @@ begin
             end;
         end;
       end;
-
-    SM_Jukebox:
-      begin
-        Case Interaction of
-          0: //Button 1
-            begin
-
-              if (Songs.SongList.Count > 0) then
-              begin
-                if USongs.CatSongs.Song[UGraphic.ScreenSong.Interaction].Main then
-                  UGraphic.ScreenSong.SetSubselection(UGraphic.ScreenSong.Interaction, sfCategory)
-                else
-                begin
-                  //Find Category
-                  I := ScreenSong.Interaction;
-                  while (not CatSongs.Song[I].Main) do
-                  begin
-                    Dec(I);
-                    if (I < 0) then
-                      break;
-                  end;
-
-                  if (I <= 1) then
-                    ScreenSong.Interaction := High(CatSongs.Song)
-                  else
-                    ScreenSong.Interaction := I - 1;
-
-                  UGraphic.ScreenSong.SetSubselection();
-                end;
-              end;
-
-              UpdateJukeboxButtons;
-            end;
-
-          1: //Button 2
-            begin
-              if (not CatSongs.Song[Interaction].Main) then
-                ScreenJukebox.AddSongToJukeboxList(ScreenSong.Interaction);
-
-              UpdateJukeboxButtons;
-            end;
-
-          2: //Button 3
-            begin
-              SetLength(ScreenJukebox.JukeboxSongsList, Length(ScreenJukebox.JukeboxSongsList)-1);
-              SetLength(ScreenJukebox.JukeboxVisibleSongs, Length(ScreenJukebox.JukeboxVisibleSongs)-1);
-
-              if (Length(ScreenJukebox.JukeboxSongsList) = 0) then
-                Interaction := 1;
-
-              UpdateJukeboxButtons;
-            end;
-
-          7: //Button 4
-            begin
-              if (Length(ScreenJukebox.JukeboxSongsList) > 0) then
-              begin
-                ScreenJukebox.CurrentSongID := ScreenJukebox.JukeboxVisibleSongs[0];
-                FadeTo(@ScreenJukebox);
-                Visible := False;
-              end
-              else
-                ScreenPopupError.ShowPopup(Language.Translate('PARTY_MODE_JUKEBOX_NO_SONGS'));
-            end;
-        end;
-      end;
-
   end;
 end;
 

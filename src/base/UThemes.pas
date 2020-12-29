@@ -269,34 +269,35 @@ type
     SelectPlayerColor:   TThemeSelectSlide;
     SelectPlayerLevel:   TThemeSelectSlide;
     SingButton: TThemeButton;
+    ExitButton: TThemeButton;
   end;
 
   TThemeSong = class(TThemeBasic)
-    TextArtist: TThemeText;
     TextNoSongs: TThemeText;
+    TextArtist: TThemeText;
     TextNumber: TThemeText;
     TextTitle: TThemeText;
     TextYear: TThemeText;
-
-    TextMedleyMax:    integer;
-
+    TextCreator: TThemeText;
+    TextFixer: TThemeText;
+    SearchIcon: TThemeStatic;
+    SearchText: TThemeText;
+    SearchTextPlaceholder: TThemeText;
+    TextMedleyMax: integer;
     TextArtistMedley: array of TThemeText;
-    TextTitleMedley:  array of TThemeText;
-    StaticMedley:     array of TThemeStatic;
+    TextTitleMedley: array of TThemeText;
+    StaticMedley: array of TThemeStatic;
     TextNumberMedley: array of TThemeText;
 
-    //Video Icon Mod
-    VideoIcon:        TThemeStatic;
-
-    //Medley Icons
-    MedleyIcon:             TThemeStatic;
-    CalculatedMedleyIcon:   TThemeStatic;
-
-    //Duet Icon
-    DuetIcon:         TThemeStatic;
-
-    //Rap Icon
-    RapIcon:          TThemeStatic;
+    //Song icons
+    VideoIcon: TThemeStatic;
+    MedleyIcon: TThemeStatic;
+    CalculatedMedleyIcon: TThemeStatic;
+    DuetIcon: TThemeStatic;
+    RapIcon: TThemeStatic;
+    CreatorIcon: TThemeStatic;
+    FixerIcon: TThemeStatic;
+    UnvalidatedIcon: TThemeStatic;
 
     //Show Cat in TopLeft Mod
     TextCat:          TThemeText;
@@ -342,7 +343,6 @@ type
       DColR, DColG, DColB: real;
     end;
 
-
     //Party and Non Party specific Statics and Texts
     StaticParty:    AThemeStatic;
     TextParty:      AThemeText;
@@ -353,16 +353,21 @@ type
     InfoMessageText: TThemeText;
     InfoMessageBG:   TThemeStatic;
 
-    //Screen Song Scores
-    TextScore:       TThemeText;
-    TextMaxScore:    TThemeText;
-    TextMediaScore:  TThemeText;
-    TextMaxScore2:   TThemeText;
-    TextMediaScore2: TThemeText;
-    TextScoreUser:   TThemeText;
-    TextMaxScoreLocal:   TThemeText;
-    TextMediaScoreLocal: TThemeText;
-    TextScoreUserLocal:  TThemeText;
+    //Ranking Song Screen
+    TextMyScores:         TThemeText;
+    TextWebsite:          TThemeText;
+    TextUserLocalScore1:  TThemeText;
+    TextUserLocalScore2:  TThemeText;
+    TextUserLocalScore3:  TThemeText;
+    TextLocalScore1:      TThemeText;
+    TextLocalScore2:      TThemeText;
+    TextLocalScore3:      TThemeText;
+    TextUserOnlineScore1: TThemeText;
+    TextUserOnlineScore2: TThemeText;
+    TextUserOnlineScore3: TThemeText;
+    TextOnlineScore1:     TThemeText;
+    TextOnlineScore2:     TThemeText;
+    TextOnlineScore3:     TThemeText;
 
     //Party Mode
     StaticTeamJoker: TThemeStatic;
@@ -793,15 +798,15 @@ type
   end;
 
   TThemeOptionsGame = class(TThemeBasic)
-    SelectLanguage:     TThemeSelectSlide;
-    SelectSongMenu:     TThemeSelectSlide;
+    SelectLanguage: TThemeSelectSlide;
+    SelectSongMenu: TThemeSelectSlide;
     SelectDuets: TThemeSelectSlide;
-    SelectSorting:      TThemeSelectSlide;
-    SelectTabs:         TThemeSelectSlide;
-    SelectShowScores:   TThemeSelectSlide;
+    SelectTabs: TThemeSelectSlide;
+    SelectSorting: TThemeSelectSlide;
+    SelectShowScores: TThemeSelectSlide;
+    SelectSingScores: TThemeSelectSlide;
     SelectFindUnsetMedley: TThemeSelectSlide;
-    SelectJoypad:       TThemeSelectSlide;
-    ButtonExit:         TThemeButton;
+    ButtonExit:TThemeButton;
   end;
 
   TThemeOptionsGraphics = class(TThemeBasic)
@@ -867,7 +872,6 @@ type
     SelectAskbeforeDel:   TThemeSelectSlide;
     SelectOnSongClick:    TThemeSelectSlide;
     SelectPartyPopup:     TThemeSelectSlide;
-    SelectSingScores:     TThemeSelectSlide;
     SelectTopScores:      TThemeSelectSlide;
     ButtonExit:           TThemeButton;
   end;
@@ -899,7 +903,7 @@ type
     ButtonPreVisualization: TThemeButton;
     ButtonExit:           TThemeButton;
   end;
-  
+
   TThemeOptionsProfiles = class(TThemeBasic)
     ButtonExit:           TThemeButton;
   end;
@@ -942,25 +946,18 @@ type
     DownloadProgressWeb: TThemeStatic;
   end;
 
-  //ScreenSong Menue
+  //ScreenSong Menu
   TThemeSongMenu = class(TThemeBasic)
     Button1: TThemeButton;
     Button2: TThemeButton;
     Button3: TThemeButton;
     Button4: TThemeButton;
     Button5: TThemeButton;
-
+    Button6: TThemeButton;
     SelectSlide1: TThemeSelectSlide;
     SelectSlide2: TThemeSelectSlide;
     SelectSlide3: TThemeSelectSlide;
-
     TextMenu: TThemeText;
-  end;
-
-  TThemeSongJumpTo = class(TThemeBasic)
-    ButtonSearchText: TThemeButton;
-    SelectSlideType:  TThemeSelectSlide;
-    TextFound:        TThemeText;
   end;
 
   //Party Screens
@@ -1257,7 +1254,6 @@ type
     ScoreDownloadPopup: TThemeScoreDownload;
     //ScreenSong extensions
     SongMenu:         TThemeSongMenu;
-    SongJumpto:       TThemeSongJumpTo;
     //Party Screens:
     PartyNewRound:    TThemePartyNewRound;
     PartyScore:       TThemePartyScore;
@@ -1614,6 +1610,7 @@ begin
 
       ThemeLoadButton(PlayerSelector.PlayerAvatar, 'NamePlayerAvatar');
       Self.ThemeLoadButton(Self.PlayerSelector.SingButton, 'NamePlayerSingButton');
+      Self.ThemeLoadButton(Self.PlayerSelector.ExitButton, 'NamePlayerExitButton');
 
       ThemeLoadSelectSlide(PlayerSelector.SelectPlayersCount, 'NameSelectPlayerCount');
       ThemeLoadSelectSlide(PlayerSelector.SelectPlayerColor, 'NameSelectPlayerColor');
@@ -2022,15 +2019,15 @@ begin
       // Options Game
       ThemeLoadBasic(OptionsGame, 'OptionsGame');
 
-      ThemeLoadSelectSlide(OptionsGame.SelectLanguage,   'OptionsGameSelectSlideLanguage');
-      ThemeLoadSelectSlide(OptionsGame.SelectSongMenu,   'OptionsGameSelectSongMenu');
+      Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectLanguage, 'OptionsGameSelectSlideLanguage');
+      Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectSongMenu, 'OptionsGameSelectSongMenu');
       Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectDuets, 'OptionsGameSelectDuets');
-      ThemeLoadSelectSlide(OptionsGame.SelectSorting,    'OptionsGameSelectSlideSorting');
-      ThemeLoadSelectSlide(OptionsGame.SelectTabs,       'OptionsGameSelectTabs');
-      ThemeLoadSelectSlide(OptionsGame.SelectShowScores, 'OptionsGameSelectShowScores');
+      Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectTabs, 'OptionsGameSelectTabs');
+      Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectSorting, 'OptionsGameSelectSlideSorting');
+      Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectShowScores, 'OptionsGameSelectShowScores');
+      Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectSingScores, 'OptionsGameSelectSingScores');
       Self.ThemeLoadSelectSlide(Self.OptionsGame.SelectFindUnsetMedley, 'OptionsGameSelectFindUnsetMedley');
-      ThemeLoadSelectSlide(OptionsGame.SelectJoypad,     'OptionsGameSelectJoypad');
-      ThemeLoadButton(OptionsGame.ButtonExit,            'OptionsGameButtonExit');
+      Self.ThemeLoadButton(Self.OptionsGame.ButtonExit, 'OptionsGameButtonExit');
 
       // Options Graphics
       ThemeLoadBasic(OptionsGraphics, 'OptionsGraphics');
@@ -2104,7 +2101,6 @@ begin
       ThemeLoadSelectSlide(OptionsAdvanced.SelectOnSongClick,   'OptionsAdvancedSelectSlideOnSongClick');
       ThemeLoadSelectSlide(OptionsAdvanced.SelectAskbeforeDel,  'OptionsAdvancedSelectAskbeforeDel');
       ThemeLoadSelectSlide(OptionsAdvanced.SelectPartyPopup,    'OptionsAdvancedSelectPartyPopup');
-      ThemeLoadSelectSlide(OptionsAdvanced.SelectSingScores,    'OptionsAdvancedSelectSingScores');
       ThemeLoadSelectSlide(OptionsAdvanced.SelectTopScores,     'OptionsAdvancedSelectTopScores');
       ThemeLoadButton     (OptionsAdvanced.ButtonExit,          'OptionsAdvancedButtonExit');
 
@@ -2140,6 +2136,7 @@ begin
       ThemeLoadButton(OptionsWebcam.ButtonExit,          'OptionsWebcamButtonExit');
 
       //Options Profiles
+	  ThemeLoadBasic(OptionsProfiles, 'OptionsProfiles');
 	  ThemeLoadButton(OptionsProfiles.ButtonExit,          'OptionsProfilesButtonExit');
 
       //error popup
@@ -2186,18 +2183,12 @@ begin
       ThemeLoadButton(SongMenu.Button3, 'SongMenuButton3');
       ThemeLoadButton(SongMenu.Button4, 'SongMenuButton4');
       ThemeLoadButton(SongMenu.Button5, 'SongMenuButton5');
+      ThemeLoadButton(SongMenu.Button6, 'SongMenuButton6');
       ThemeLoadSelectSlide(SongMenu.SelectSlide1, 'SongMenuSelectSlide1');
       ThemeLoadSelectSlide(SongMenu.SelectSlide2, 'SongMenuSelectSlide2');
       ThemeLoadSelectSlide(SongMenu.SelectSlide3, 'SongMenuSelectSlide3');
 
       ThemeLoadText(SongMenu.TextMenu, 'SongMenuTextMenu');
-
-      //Song Jumpto
-      ThemeLoadBasic (SongJumpto, 'SongJumpto');
-      ThemeLoadButton(SongJumpto.ButtonSearchText, 'SongJumptoButtonSearchText');
-
-      ThemeLoadSelectSlide(SongJumpto.SelectSlideType, 'SongJumptoSelectSlideType');
-      ThemeLoadText(SongJumpto.TextFound, 'SongJumptoTextFound');
 
       //Party Options
       ThemeLoadBasic(PartyOptions, 'PartyOptions');
@@ -2448,6 +2439,7 @@ begin
   end;
 
   Self.ReadProperty(Name, 'Size', 0, ThemeText.Size);
+  Self.ReadProperty(Name, 'Writable', false, ThemeText.Writable);
   Self.ReadProperty(Name, 'Reflection', false, ThemeText.Reflection);
   Self.ReadProperty(Name, 'ReflectionSpacing', 15, ThemeText.ReflectionSpacing);
 end;
@@ -3546,9 +3538,8 @@ begin
   ThemeLoadText(Score.TextTitle, 'ScoreTextTitle');
   ThemeLoadText(Score.TextArtistTitle, 'ScoreTextArtistTitle');
 
-  if (Ini.Players < 3) or (Ini.Screens = 1) then
-    prefix := ''
-  else
+  prefix := '';
+  if not((Ini.Players < 3) or (Ini.Screens = 1)) then
   begin
     // 4 players 1 screen
     if (Ini.Players = 3) then
@@ -3593,6 +3584,7 @@ var
   I, C: integer;
   prefix, TempString: string;
 begin
+  prefix := '';
   case (TSongMenuMode(Ini.SongMenu)) of
     smRoulette: prefix := 'Roulette';
     smChessboard: prefix := 'Chessboard';
@@ -3610,6 +3602,11 @@ begin
   ThemeLoadText(Song.TextTitle, 'Song' + prefix + 'TextTitle');
   ThemeLoadText(Song.TextNumber, 'Song' + prefix + 'TextNumber');
   ThemeLoadText(Song.TextYear, 'Song' + prefix + 'TextYear');
+  ThemeLoadText(Song.TextCreator, 'Song' + prefix + 'TextCreator');
+  ThemeLoadText(Song.TextFixer, 'Song' + prefix + 'TextFixer');
+  Self.ThemeLoadText(Self.Song.SearchText, 'Song'+prefix+'SearchText');
+  Self.ThemeLoadText(Self.Song.SearchTextPlaceholder, 'Song'+prefix+'SearchTextPlaceholder');
+  Self.ThemeLoadStatic(Self.Song.SearchIcon, 'Song'+prefix+'SearchIcon');
 
   // medley playlist
   Self.SetInheritance('Song'+prefix+'TextMedleyMax');
@@ -3628,18 +3625,15 @@ begin
     ThemeLoadStatic(Song.StaticMedley[I], 'Song' + prefix + 'StaticMedley' + IntToStr(I + 1));
   end;
 
-  //Video Icon Mod
-  ThemeLoadStatic(Song.VideoIcon, 'Song' + prefix + 'VideoIcon');
-
-  //Medley Icons
-  ThemeLoadStatic(Song.MedleyIcon, 'Song' + prefix + 'MedleyIcon');
-  ThemeLoadStatic(Song.CalculatedMedleyIcon, 'Song' + prefix + 'CalculatedMedleyIcon');
-
-  //Duet Icon
-  ThemeLoadStatic(Song.DuetIcon, 'Song' + prefix + 'DuetIcon');
-
-  //Rap Icon
-  ThemeLoadStatic(Song.RapIcon, 'Song' + prefix + 'RapIcon');
+  //Song icons
+  Self.ThemeLoadStatic(Self.Song.VideoIcon, 'Song'+prefix+'VideoIcon');
+  Self.ThemeLoadStatic(Self.Song.MedleyIcon, 'Song'+prefix+'MedleyIcon');
+  Self.ThemeLoadStatic(Self.Song.CalculatedMedleyIcon, 'Song'+prefix+'CalculatedMedleyIcon');
+  Self.ThemeLoadStatic(Self.Song.DuetIcon, 'Song'+prefix+'DuetIcon');
+  Self.ThemeLoadStatic(Self.Song.RapIcon, 'Song'+prefix+'RapIcon');
+  Self.ThemeLoadStatic(Self.Song.CreatorIcon, 'Song'+prefix+'CreatorIcon');
+  Self.ThemeLoadStatic(Self.Song.FixerIcon, 'Song'+prefix+'FixerIcon');
+  Self.ThemeLoadStatic(Self.Song.UnvalidatedIcon, 'Song'+prefix+'UnvalidatedIcon');
 
   //Show Cat in TopLeft Mod
   ThemeLoadText(Song.TextCat, 'Song' + prefix + 'TextCat');
@@ -3698,16 +3692,21 @@ begin
 
   ThemeLoadEqualizer(Song.Equalizer, 'Song' + prefix + 'Equalizer');
 
-  //Screen Song Scores
-  ThemeLoadText(Song.TextScore, 'Song' + prefix + 'TextScore');
-  ThemeLoadText(Song.TextMaxScore, 'Song' + prefix + 'TextMaxScore');
-  ThemeLoadText(Song.TextMediaScore, 'Song' + prefix + 'TextMediaScore');
-  ThemeLoadText(Song.TextMaxScore2, 'Song' + prefix + 'TextMaxScore2');
-  ThemeLoadText(Song.TextMediaScore2, 'Song' + prefix + 'TextMediaScore2');
-  ThemeLoadText(Song.TextScoreUser, 'Song' + prefix + 'TextScoreUser');
-  ThemeLoadText(Song.TextMaxScoreLocal, 'Song' + prefix + 'TextMaxScoreLocal');
-  ThemeLoadText(Song.TextMediaScoreLocal, 'Song' + prefix + 'TextMediaScoreLocal');
-  ThemeLoadText(Song.TextScoreUserLocal, 'Song' + prefix + 'TextScoreUserLocal');
+  //Ranking Song Screen
+  ThemeLoadText(Song.TextMyScores, 'Song' + prefix + 'TextMyScores');
+  ThemeLoadText(Song.TextWebsite, 'Song' + prefix + 'TextWebsite');
+  ThemeLoadText(Song.TextUserLocalScore1, 'Song' + prefix + 'TextUserLocalScore1');
+  ThemeLoadText(Song.TextUserLocalScore2, 'Song' + prefix + 'TextUserLocalScore2');
+  ThemeLoadText(Song.TextUserLocalScore3, 'Song' + prefix + 'TextUserLocalScore3');
+  ThemeLoadText(Song.TextLocalScore1, 'Song' + prefix + 'TextLocalScore1');
+  ThemeLoadText(Song.TextLocalScore2, 'Song' + prefix + 'TextLocalScore2');
+  ThemeLoadText(Song.TextLocalScore3, 'Song' + prefix + 'TextLocalScore3');
+  ThemeLoadText(Song.TextUserOnlineScore1, 'Song' + prefix + 'TextUserOnlineScore1');
+  ThemeLoadText(Song.TextUserOnlineScore2, 'Song' + prefix + 'TextUserOnlineScore2');
+  ThemeLoadText(Song.TextUserOnlineScore3, 'Song' + prefix + 'TextUserOnlineScore3');
+  ThemeLoadText(Song.TextOnlineScore1, 'Song' + prefix + 'TextOnlineScore1');
+  ThemeLoadText(Song.TextOnlineScore2, 'Song' + prefix + 'TextOnlineScore2');
+  ThemeLoadText(Song.TextOnlineScore3, 'Song' + prefix + 'TextOnlineScore3');
 
   //Party and Non Party specific Statics and Texts
   ThemeLoadStatics (Song.StaticParty, 'Song' + prefix + 'StaticParty');
@@ -3776,7 +3775,6 @@ begin
   Self.SendScorePopup := TThemeSendScore.Create();
   Self.ScoreDownloadPopup := TThemeScoreDownload.Create();
   Self.SongMenu := TThemeSongMenu.Create();
-  Self.SongJumpto := TThemeSongJumpto.Create();
   Self.PartyNewRound := TThemePartyNewRound.Create();
   Self.PartyWin := TThemePartyWin.Create();
   Self.PartyScore := TThemePartyScore.Create();

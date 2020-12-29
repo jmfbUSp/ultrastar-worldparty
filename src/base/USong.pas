@@ -134,9 +134,9 @@ type
     PreviewStart: real;   // in seconds
     Medley:     TMedley;  // medley params
 
+    Validated: boolean;
     isDuet: boolean;
     DuetNames:  array of UTF8String; // duet singers name
-
     hasRap: boolean;
 
     Score:      array[0..2] of array of TScore;
@@ -297,8 +297,10 @@ begin
   Self.Video := PATH_NONE;
   Self.VideoGAP := 0;
   Self.Creator := '';
+  Self.Fixer   := '';
   Self.PreviewStart := 0;
   Self.Medley.Source := msNone;
+  Self.Validated := true;
   Self.isDuet := false;
   SetLength(Self.DuetNames, 2);
   Self.DuetNames[0] := 'P1';
@@ -561,6 +563,14 @@ begin
     if (High(Lines[I].Line) >= 0) then
       Lines[I].Line[High(Lines[I].Line)].LastLine := true;
   end;
+
+  I := Self.Lines[0].Line[High(Self.Lines[0].Line)].Note[High(Self.Lines[0].Line[High(Self.Lines[0].Line)].Note)].End_;
+  if (Self.Medley.StartBeat > I) or (Self.Medley.EndBeat > I) then
+  begin
+    Log.LogError('Medley out of range: '+Self.FullPath);
+    Exit;
+  end;
+
   //TODO idk why do it only in windows
   {$IFDEF MSWINDOWS}
     Self.MD5 := MD5Print(MD5String(Self.MD5));
